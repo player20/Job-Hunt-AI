@@ -141,46 +141,72 @@ async function scrapeJSearchJobs(): Promise<ScrapedJob[]> {
     return [];
   }
 
-  try {
-    const response = await axios.get('https://jsearch.p.rapidapi.com/search', {
-      params: {
-        query: 'software engineer in USA',
-        page: '1',
-        num_pages: '1',
-        date_posted: 'week',
-      },
-      headers: {
-        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-        'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
-      },
-      timeout: 10000,
-    });
+  // Multiple search queries to get comprehensive nationwide coverage
+  const searchQueries = [
+    'software engineer in USA',
+    'product manager in USA',
+    'data analyst in USA',
+    'marketing manager in USA',
+    'sales representative in USA',
+    'business analyst in USA',
+    'project manager in USA',
+    'web developer in USA',
+    'graphic designer in USA',
+    'customer success manager in USA',
+  ];
 
-    const jobs = response.data.data || [];
+  const allJobs: ScrapedJob[] = [];
 
-    return jobs.slice(0, 50).map((job: any) => ({
-      title: job.job_title,
-      company: job.employer_name,
-      description: job.job_description || '',
-      requirements: job.job_required_skills || [],
-      location: `${job.job_city || ''}, ${job.job_state || ''}, ${job.job_country || 'USA'}`.trim(),
-      locationType: job.job_is_remote ? 'remote' : 'onsite',
-      salaryMin: job.job_min_salary ? parseInt(job.job_min_salary) : undefined,
-      salaryMax: job.job_max_salary ? parseInt(job.job_max_salary) : undefined,
-      sourceUrl: job.job_apply_link || job.job_google_link,
-      sourceBoard: `JSearch (${job.job_publisher})`,
-      externalId: `jsearch-${job.job_id}`,
-      postedDate: job.job_posted_at_datetime_utc ? new Date(job.job_posted_at_datetime_utc) : new Date(),
-    }));
-  } catch (error: any) {
-    console.error('[JobScraper] JSearch API failed:', {
-      error: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      timeout: error.code === 'ECONNABORTED',
-    });
-    return [];
+  // Make requests with delay to respect rate limits
+  for (const query of searchQueries) {
+    try {
+      const response = await axios.get('https://jsearch.p.rapidapi.com/search', {
+        params: {
+          query,
+          page: '1',
+          num_pages: '1',
+          date_posted: 'month', // Changed from 'week' to 'month' for more results
+        },
+        headers: {
+          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+          'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
+        },
+        timeout: 10000,
+      });
+
+      const jobs = response.data.data || [];
+
+      const mappedJobs = jobs.slice(0, 10).map((job: any) => ({
+        title: job.job_title,
+        company: job.employer_name,
+        description: job.job_description || '',
+        requirements: job.job_required_skills || [],
+        location: `${job.job_city || ''}, ${job.job_state || ''}, ${job.job_country || 'USA'}`.trim(),
+        locationType: job.job_is_remote ? 'remote' : 'onsite',
+        salaryMin: job.job_min_salary ? parseInt(job.job_min_salary) : undefined,
+        salaryMax: job.job_max_salary ? parseInt(job.job_max_salary) : undefined,
+        sourceUrl: job.job_apply_link || job.job_google_link,
+        sourceBoard: `JSearch (${job.job_publisher})`,
+        externalId: `jsearch-${job.job_id}`,
+        postedDate: job.job_posted_at_datetime_utc ? new Date(job.job_posted_at_datetime_utc) : new Date(),
+      }));
+
+      allJobs.push(...mappedJobs);
+      console.log(`  ✅ JSearch query "${query}": ${mappedJobs.length} jobs`);
+
+      // Add 500ms delay between requests to respect rate limits
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    } catch (error: any) {
+      console.error(`[JobScraper] JSearch query "${query}" failed:`, {
+        error: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
+      // Continue with next query even if one fails
+    }
   }
+
+  return allJobs;
 }
 
 /**
