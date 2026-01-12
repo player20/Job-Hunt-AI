@@ -80,7 +80,9 @@ export default function JobSearch() {
 
   const handleScrapeJobs = async () => {
     try {
-      await scrapeJobs();
+      // Pass userId to use custom search queries from preferences
+      const userId = preferences?.userId;
+      await scrapeJobs(userId);
       refetch();
     } catch (error) {
       console.error('Failed to scrape jobs:', error);

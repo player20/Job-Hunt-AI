@@ -135,9 +135,10 @@ export const jobApi = {
   },
 
   // Trigger job scraping
-  scrape: async (): Promise<{ message: string; count: number }> => {
+  scrape: async (userId?: string): Promise<{ message: string; count: number }> => {
     const response = await api.post<{ message: string; count: number }>(
-      '/jobs/scrape'
+      '/jobs/scrape',
+      { userId }
     );
     return response.data;
   },

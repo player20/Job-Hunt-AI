@@ -59,7 +59,7 @@ export const useJobScraper = () => {
   const queryClient = useQueryClient();
 
   const scrapeMutation = useMutation(
-    () => jobApi.scrape(),
+    (userId?: string) => jobApi.scrape(userId),
     {
       onSuccess: () => {
         // Invalidate all job queries to refetch with new data

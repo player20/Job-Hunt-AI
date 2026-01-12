@@ -21,6 +21,7 @@ export interface UserPreferences {
   desiredLocations?: string[]; // JSON parsed
   desiredSalaryMin?: number;
   remotePreference?: 'remote_only' | 'hybrid' | 'onsite' | 'flexible';
+  searchQueries?: string[]; // JSON parsed - custom job search queries
   autoApply: boolean;
   dailyApplicationLimit?: number;
   claudeApiKey?: string;

@@ -158,6 +158,9 @@ model UserPreferences {
   desiredSalaryMin Int?    @map("desired_salary_min")
   remotePreference String? @map("remote_preference") // remote_only, hybrid, onsite, flexible
 
+  // Job scraping settings
+  searchQueries String? @map("search_queries") // JSON array of search queries for job scraping
+
   // Application settings
   autoApply             Boolean @default(false) @map("auto_apply")
   dailyApplicationLimit Int?    @map("daily_application_limit")

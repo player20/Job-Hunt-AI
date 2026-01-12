@@ -79,6 +79,7 @@ export const userPreferencesSchema = z.object({
   remotePreference: z
     .enum(['remote_only', 'hybrid', 'onsite', 'flexible'])
     .optional(),
+  searchQueries: z.array(z.string()).optional(),
   autoApply: z.boolean().optional(),
   dailyApplicationLimit: z.number().min(1).max(100).optional(),
   claudeApiKey: z.string().optional(),

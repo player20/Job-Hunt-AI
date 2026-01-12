@@ -134,15 +134,15 @@ async function scrapeRemoteOKJobs(): Promise<ScrapedJob[]> {
  * Scrape jobs from JSearch API via RapidAPI (US jobs - Indeed, LinkedIn, Glassdoor aggregator)
  * Note: Requires RAPIDAPI_KEY environment variable
  */
-async function scrapeJSearchJobs(): Promise<ScrapedJob[]> {
+async function scrapeJSearchJobs(customQueries?: string[]): Promise<ScrapedJob[]> {
   // Only run if API key is configured
   if (!process.env.RAPIDAPI_KEY) {
     console.log('[JobScraper] Skipping JSearch - no RAPIDAPI_KEY configured');
     return [];
   }
 
-  // Multiple search queries to get comprehensive nationwide coverage
-  const searchQueries = [
+  // Default search queries if none provided
+  const defaultQueries = [
     'software engineer in USA',
     'product manager in USA',
     'data analyst in USA',
@@ -154,6 +154,9 @@ async function scrapeJSearchJobs(): Promise<ScrapedJob[]> {
     'graphic designer in USA',
     'customer success manager in USA',
   ];
+
+  // Use custom queries if provided, otherwise use defaults
+  const searchQueries = customQueries && customQueries.length > 0 ? customQueries : defaultQueries;
 
   const allJobs: ScrapedJob[] = [];
 
@@ -211,14 +214,19 @@ async function scrapeJSearchJobs(): Promise<ScrapedJob[]> {
 
 /**
  * Main scraper - fetches jobs from all sources
+ * @param searchQueries - Optional custom search queries for JSearch API
  */
-export async function scrapeAllJobs(): Promise<ScrapedJob[]> {
+export async function scrapeAllJobs(searchQueries?: string[]): Promise<ScrapedJob[]> {
   console.log('🔍 Starting job scraping from all sources...');
+
+  if (searchQueries && searchQueries.length > 0) {
+    console.log(`📋 Using ${searchQueries.length} custom search queries`);
+  }
 
   const results = await Promise.allSettled([
     scrapeRemotiveJobs(),
     scrapeRemoteOKJobs(),
-    scrapeJSearchJobs(),
+    scrapeJSearchJobs(searchQueries),
   ]);
 
   const allJobs: ScrapedJob[] = [];

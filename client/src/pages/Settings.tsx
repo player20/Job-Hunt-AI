@@ -17,6 +17,8 @@ export default function Settings() {
   const [remotePreference, setRemotePreference] = useState<string>('flexible');
   const [desiredSalaryMin, setDesiredSalaryMin] = useState<number>(0);
   const [desiredSalaryMax, setDesiredSalaryMax] = useState<number>(0);
+  const [searchQueries, setSearchQueries] = useState<string[]>([]);
+  const [searchQueryInput, setSearchQueryInput] = useState('');
   const [autoApply, setAutoApply] = useState(false);
   const [dailyApplicationLimit, setDailyApplicationLimit] = useState<number>(10);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -29,6 +31,7 @@ export default function Settings() {
       setRemotePreference(preferences.remotePreference || 'flexible');
       setDesiredSalaryMin(preferences.desiredSalaryMin || 0);
       setDesiredSalaryMax(preferences.desiredSalaryMax || 0);
+      setSearchQueries(preferences.searchQueries || []);
       setAutoApply(preferences.autoApply || false);
       setDailyApplicationLimit(preferences.dailyApplicationLimit || 10);
     }
@@ -62,6 +65,20 @@ export default function Settings() {
     setDesiredLocations(desiredLocations.filter((l) => l !== location));
   };
 
+  const handleAddSearchQuery = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQueryInput.trim()) {
+      e.preventDefault();
+      if (!searchQueries.includes(searchQueryInput.trim())) {
+        setSearchQueries([...searchQueries, searchQueryInput.trim()]);
+      }
+      setSearchQueryInput('');
+    }
+  };
+
+  const handleRemoveSearchQuery = (query: string) => {
+    setSearchQueries(searchQueries.filter((q) => q !== query));
+  };
+
   const handleSave = async () => {
     try {
       await update({
@@ -70,6 +87,7 @@ export default function Settings() {
         remotePreference,
         desiredSalaryMin,
         desiredSalaryMax,
+        searchQueries,
         autoApply,
         dailyApplicationLimit,
       });
@@ -252,6 +270,54 @@ export default function Settings() {
           </div>
 
           <div className="card mt-3">
+            <h3>Job Scraping Settings</h3>
+            <p className="text-muted mt-2">
+              Customize search queries for job scraping. These queries will be used when fetching jobs from job boards.
+            </p>
+
+            <div className="form-group mt-4">
+              <label htmlFor="searchQueries">
+                <strong>Custom Search Queries</strong>
+              </label>
+              <p className="text-muted">
+                Press Enter after typing each query to add it (e.g., "software engineer in USA")
+              </p>
+              <input
+                type="text"
+                id="searchQueries"
+                className="input"
+                placeholder='e.g., "product manager in New York", "remote data analyst"'
+                value={searchQueryInput}
+                onChange={(e) => setSearchQueryInput(e.target.value)}
+                onKeyDown={handleAddSearchQuery}
+              />
+              <div className="tags-container mt-2">
+                {searchQueries.length === 0 && (
+                  <p className="text-muted">
+                    No custom queries set. Default queries will be used (Software Engineer, Product Manager, etc.)
+                  </p>
+                )}
+                {searchQueries.map((query) => (
+                  <span key={query} className="tag tag-secondary">
+                    {query}
+                    <button
+                      className="tag-remove"
+                      onClick={() => handleRemoveSearchQuery(query)}
+                      aria-label={`Remove ${query}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="info-box mt-3">
+              <strong>💡 Pro Tip:</strong> Be specific with your queries for better results. Include location, job title, and any specific requirements (e.g., "senior react developer in California", "entry level marketing remote").
+            </div>
+          </div>
+
+          <div className="card mt-3">
             <h3>Application Settings</h3>
             <p className="text-muted mt-2">
               Configure how you want to apply to jobs.
@@ -369,6 +435,20 @@ export default function Settings() {
 
         .tag-remove:hover {
           background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .tag-secondary {
+          background-color: #6b7280;
+        }
+
+        .info-box {
+          padding: var(--spacing-md);
+          background-color: #eff6ff;
+          border-left: 4px solid var(--color-primary);
+          border-radius: var(--radius-md);
+          font-size: 0.875rem;
+          color: #374151;
+          line-height: 1.6;
         }
 
         .radio-group {

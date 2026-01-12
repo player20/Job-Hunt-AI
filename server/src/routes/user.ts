@@ -55,6 +55,9 @@ router.get(
       desiredLocations: preferences.desiredLocations
         ? JSON.parse(preferences.desiredLocations)
         : [],
+      searchQueries: preferences.searchQueries
+        ? JSON.parse(preferences.searchQueries)
+        : [],
     };
 
     res.json(response);
@@ -93,6 +96,9 @@ router.put(
           : undefined,
         desiredSalaryMin: validated.desiredSalaryMin,
         remotePreference: validated.remotePreference,
+        searchQueries: validated.searchQueries
+          ? JSON.stringify(validated.searchQueries)
+          : undefined,
         autoApply: validated.autoApply,
         dailyApplicationLimit: validated.dailyApplicationLimit,
         claudeApiKey: validated.claudeApiKey,
@@ -107,6 +113,9 @@ router.put(
           : null,
         desiredSalaryMin: validated.desiredSalaryMin,
         remotePreference: validated.remotePreference,
+        searchQueries: validated.searchQueries
+          ? JSON.stringify(validated.searchQueries)
+          : null,
         autoApply: validated.autoApply ?? false,
         dailyApplicationLimit: validated.dailyApplicationLimit,
         claudeApiKey: validated.claudeApiKey,
@@ -121,6 +130,9 @@ router.put(
         : [],
       desiredLocations: preferences.desiredLocations
         ? JSON.parse(preferences.desiredLocations)
+        : [],
+      searchQueries: preferences.searchQueries
+        ? JSON.parse(preferences.searchQueries)
         : [],
     };
 

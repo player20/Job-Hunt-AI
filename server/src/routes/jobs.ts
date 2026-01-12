@@ -103,13 +103,36 @@ router.get(
 // POST /api/jobs/scrape - Trigger job scraping
 // ============================================
 
+const scrapeSchema = z.object({
+  userId: z.string().optional(),
+});
+
 router.post(
   '/scrape',
   asyncHandler(async (req, res) => {
     console.log('🔍 Manual job scraping triggered');
 
-    // Scrape jobs from all sources
-    const scrapedJobs = await scrapeAllJobs();
+    const body = scrapeSchema.parse(req.body);
+    let searchQueries: string[] | undefined = undefined;
+
+    // If userId provided, fetch their custom search queries
+    if (body.userId) {
+      const preferences = await prisma.userPreferences.findUnique({
+        where: { userId: body.userId },
+      });
+
+      if (preferences?.searchQueries) {
+        try {
+          searchQueries = JSON.parse(preferences.searchQueries);
+          console.log(`📋 Using ${searchQueries.length} custom search queries from user preferences`);
+        } catch (error) {
+          console.error('Failed to parse search queries from preferences:', error);
+        }
+      }
+    }
+
+    // Scrape jobs from all sources with custom queries if provided
+    const scrapedJobs = await scrapeAllJobs(searchQueries);
 
     // Deduplicate
     const uniqueJobs = deduplicateJobs(scrapedJobs);
