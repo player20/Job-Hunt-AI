@@ -46,7 +46,12 @@ async function scrapeRemotiveJobs(): Promise<ScrapedJob[]> {
       postedDate: job.publication_date ? new Date(job.publication_date) : new Date(),
     }));
   } catch (error: any) {
-    console.error('Error scraping Remotive jobs:', error.message);
+    console.error('[JobScraper] Remotive API failed:', {
+      error: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      timeout: error.code === 'ECONNABORTED',
+    });
     return [];
   }
 }
@@ -75,7 +80,12 @@ async function scrapeArbeitnowJobs(): Promise<ScrapedJob[]> {
       postedDate: job.created_at ? new Date(job.created_at * 1000) : new Date(),
     }));
   } catch (error: any) {
-    console.error('Error scraping Arbeitnow jobs:', error.message);
+    console.error('[JobScraper] Arbeitnow API failed:', {
+      error: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      timeout: error.code === 'ECONNABORTED',
+    });
     return [];
   }
 }
