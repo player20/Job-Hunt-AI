@@ -1,0 +1,180 @@
+// Job Hunt AI Database Schema
+// SQLite for local development, easily migrate to PostgreSQL for production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER MODEL
+// ============================================================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  resumes      Resume[]
+  applications Application[]
+  preferences  UserPreferences?
+
+  @@map("users")
+}
+
+// ============================================================================
+// RESUME MODEL
+// ============================================================================
+
+model Resume {
+  id       String  @id @default(uuid())
+  userId   String  @map("user_id")
+  fileName String  @map("file_name")
+  fileUrl  String? @map("file_url") // Local file path
+  fileType String  @map("file_type") // pdf, docx
+
+  // Parsed resume data
+  fullName       String? @map("full_name")
+  email          String?
+  phone          String?
+  location       String?
+  summary        String?
+  skills         String? // JSON array stored as text
+  experience     String? // JSON array stored as text
+  education      String? // JSON array stored as text
+  certifications String? // JSON array stored as text
+
+  // Metadata
+  isPrimary Boolean  @default(false) @map("is_primary")
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([userId])
+  @@index([isPrimary])
+  @@map("resumes")
+}
+
+// ============================================================================
+// JOB MODEL
+// ============================================================================
+
+model Job {
+  id          String  @id @default(uuid())
+  title       String
+  company     String
+  description String
+  requirements String? // JSON array stored as text
+
+  // Location & compensation
+  location       String?
+  locationType   String? @map("location_type") // remote, hybrid, onsite
+  salaryMin      Int?    @map("salary_min")
+  salaryMax      Int?    @map("salary_max")
+  salaryCurrency String? @map("salary_currency")
+
+  // Source information
+  sourceUrl   String  @map("source_url") // Original job posting URL
+  sourceBoard String  @map("source_board") // indeed, linkedin, github, etc.
+  externalId  String? @map("external_id") // Job board's ID
+
+  // Metadata
+  postedDate DateTime? @map("posted_date")
+  expiresAt  DateTime? @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  applications Application[]
+
+  @@unique([sourceBoard, externalId])
+  @@index([title])
+  @@index([company])
+  @@index([location])
+  @@index([createdAt])
+  @@index([sourceBoard])
+  @@map("jobs")
+}
+
+// ============================================================================
+// APPLICATION MODEL
+// ============================================================================
+
+model Application {
+  id       String  @id @default(uuid())
+  userId   String  @map("user_id")
+  jobId    String  @map("job_id")
+  resumeId String? @map("resume_id")
+  status   String  @default("pending") @map("status") // pending, applied, viewed, interview_requested, interviewed, offered, rejected, withdrawn
+
+  // Application details
+  coverLetter  String? @map("cover_letter")
+  customResume String? @map("custom_resume") // AI-tailored resume content
+
+  // Tracking timestamps
+  appliedAt   DateTime? @map("applied_at")
+  viewedAt    DateTime? @map("viewed_at")
+  respondedAt DateTime? @map("responded_at")
+
+  // AI-generated metadata
+  matchScore   Float?  @map("match_score") // 0-100
+  matchReasons String? @map("match_reasons") // JSON stored as text
+
+  // User notes
+  notes String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job    Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, jobId])
+  @@index([userId, status])
+  @@index([jobId])
+  @@index([createdAt])
+  @@map("applications")
+}
+
+// ============================================================================
+// USER PREFERENCES MODEL
+// ============================================================================
+
+model UserPreferences {
+  userId String @id @map("user_id")
+
+  // Job preferences - stored as JSON text for SQLite
+  desiredTitles    String? @map("desired_titles") // JSON array
+  desiredLocations String? @map("desired_locations") // JSON array
+  desiredSalaryMin Int?    @map("desired_salary_min")
+  remotePreference String? @map("remote_preference") // remote_only, hybrid, onsite, flexible
+
+  // Application settings
+  autoApply             Boolean @default(false) @map("auto_apply")
+  dailyApplicationLimit Int?    @map("daily_application_limit")
+
+  // AI settings
+  claudeApiKey String? @map("claude_api_key") // Optional: user's own API key
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+// ============================================================================
+// NOTES
+// ============================================================================
+// SQLite does not support enums, so we use String with comments
+// ApplicationStatus: "pending" | "applied" | "viewed" | "interview_requested" | "interviewed" | "offered" | "rejected" | "withdrawn"

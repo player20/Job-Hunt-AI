@@ -1,0 +1,71 @@
+.resume-uploader {
+  width: 100%;
+}
+
+.dropzone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2xl);
+  text-align: center;
+  transition: all 0.2s;
+  cursor: pointer;
+  background-color: var(--color-bg);
+}
+
+.dropzone:hover:not(.disabled) {
+  border-color: var(--color-primary);
+  background-color: rgba(37, 99, 235, 0.02);
+}
+
+.dropzone.active {
+  border-color: var(--color-primary);
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.dropzone.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.upload-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.upload-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.progress-bar {
+  width: 100%;
+  max-width: 300px;
+  height: 8px;
+  background-color: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--color-primary);
+  transition: width 0.3s ease;
+}
+
+.error-message {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
