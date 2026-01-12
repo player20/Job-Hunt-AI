@@ -125,6 +125,15 @@ export default function JobCard({ job, onClick }: JobCardProps) {
           ${onClick ? 'transform: translateY(-2px);' : ''}
         }
 
+        .job-card:focus {
+          outline: 3px solid #3b82f6;
+          outline-offset: 2px;
+        }
+
+        .job-card:focus:not(:focus-visible) {
+          outline: none;
+        }
+
         .job-card-header {
           margin-bottom: var(--spacing-md, 1rem);
         }
@@ -213,7 +222,7 @@ export default function JobCard({ job, onClick }: JobCardProps) {
 
         .job-source {
           font-size: 0.75rem;
-          color: var(--color-text-muted, #9ca3af);
+          color: var(--color-text-muted, #6b7280);
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -221,7 +230,7 @@ export default function JobCard({ job, onClick }: JobCardProps) {
 
         .job-posted {
           font-size: 0.75rem;
-          color: var(--color-text-muted, #9ca3af);
+          color: var(--color-text-muted, #6b7280);
         }
 
         @media (max-width: 768px) {

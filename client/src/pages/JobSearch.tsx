@@ -6,15 +6,19 @@
 import { useState, useEffect } from 'react';
 import { useJobs, useJobScraper } from '../hooks/useJobs';
 import { useUserPreferences } from '../hooks/useUserPreferences';
+import { useResumes } from '../hooks/useResumes';
 import JobCard from '../components/jobs/JobCard';
 import JobFilters from '../components/jobs/JobFilters';
-import type { JobFilters as JobFiltersType } from '../types';
+import JobDetailsModal from '../components/jobs/JobDetailsModal';
+import type { Job, JobFilters as JobFiltersType } from '../types';
 
 export default function JobSearch() {
   const { preferences } = useUserPreferences();
+  const { resumes } = useResumes();
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   const [filters, setFilters] = useState<JobFiltersType>({
-    limit: 20,
+    limit: 50,
     page: 1,
   });
 
@@ -23,7 +27,7 @@ export default function JobSearch() {
     if (preferences && Object.keys(filters).length === 2) {
       // Only auto-populate on initial load (when filters only has limit and page)
       const newFilters: JobFiltersType = {
-        limit: 20,
+        limit: 50,
         page: 1,
       };
 
@@ -61,7 +65,7 @@ export default function JobSearch() {
   const handleFiltersChange = (newFilters: JobFiltersType) => {
     setFilters({
       ...newFilters,
-      limit: 20,
+      limit: 50,
       page: 1,
     });
   };
@@ -70,7 +74,7 @@ export default function JobSearch() {
     setFilters((prev) => ({
       ...prev,
       page: (prev.page || 1) + 1,
-      limit: 20,
+      limit: 50,
     }));
   };
 
@@ -84,8 +88,15 @@ export default function JobSearch() {
   };
 
   const handleJobClick = (jobId: string) => {
-    // TODO: Navigate to job details page or open modal
-    console.log('Job clicked:', jobId);
+    const job = jobs.find((j) => j.id === jobId);
+    if (job) {
+      setSelectedJob(job);
+    }
+  };
+
+  const handleTailorResume = () => {
+    // TODO: Navigate to tailoring page or open tailoring modal
+    console.log('Tailor resume for job:', selectedJob?.id);
   };
 
   return (
@@ -183,6 +194,16 @@ export default function JobSearch() {
           )}
         </main>
       </div>
+
+      {/* Job Details Modal */}
+      {selectedJob && (
+        <JobDetailsModal
+          job={selectedJob}
+          resumeId={resumes[0]?.id}
+          onClose={() => setSelectedJob(null)}
+          onTailorResume={handleTailorResume}
+        />
+      )}
 
       <style>{`
         .job-search-page {
