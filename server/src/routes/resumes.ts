@@ -13,12 +13,14 @@ import { env } from '../config/env';
 import { asyncHandler, AppError } from '../middleware/error-handler';
 import { uploadRateLimiter } from '../middleware/security';
 import { parseResumeFile } from '../services/resumeParser';
+import { tailorResume } from '../services/resumeTailor';
 import { resumeUpdateSchema } from '../validators/schemas';
 import {
   MAX_FILE_SIZE,
   ALLOWED_RESUME_TYPES,
   ALLOWED_FILE_EXTENSIONS,
 } from '../config/constants';
+import { z } from 'zod';
 
 const router = Router();
 
@@ -274,6 +276,59 @@ router.post(
     });
 
     res.json(updated);
+  })
+);
+
+/**
+ * POST /api/resumes/:id/tailor
+ * Tailor resume for a specific job with AI keyword optimization
+ */
+const tailorResumeSchema = z.object({
+  jobId: z.string().uuid(),
+  keywords: z.array(z.string()).optional(),
+});
+
+router.post(
+  '/:id/tailor',
+  asyncHandler(async (req, res) => {
+    const validated = tailorResumeSchema.parse(req.body);
+    const resumeId = req.params.id;
+
+    // Verify resume exists
+    const resume = await prisma.resume.findUnique({
+      where: { id: resumeId },
+    });
+
+    if (!resume) {
+      throw new AppError('Resume not found', 404);
+    }
+
+    // Verify job exists
+    const job = await prisma.job.findUnique({
+      where: { id: validated.jobId },
+    });
+
+    if (!job) {
+      throw new AppError('Job not found', 404);
+    }
+
+    // Extract keywords from job if not provided
+    let keywords = validated.keywords || [];
+
+    if (keywords.length === 0) {
+      // Parse requirements from job if available
+      try {
+        const requirements = job.requirements ? JSON.parse(job.requirements) : [];
+        keywords = requirements;
+      } catch (e) {
+        keywords = [];
+      }
+    }
+
+    // Tailor resume using AI
+    const result = await tailorResume(resumeId, validated.jobId, keywords);
+
+    res.json(result);
   })
 );
 

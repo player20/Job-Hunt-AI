@@ -5,8 +5,9 @@
 
 import { Router } from 'express';
 import { prisma } from '../config/database';
-import { asyncHandler } from '../middleware/error-handler';
+import { asyncHandler, AppError } from '../middleware/error-handler';
 import { scrapeAllJobs, deduplicateJobs } from '../services/jobScraper';
+import { analyzeJobMatch } from '../services/matchAnalyzer';
 import { z } from 'zod';
 
 const router = Router();
@@ -173,6 +174,46 @@ router.post(
       updated,
       total: created + updated,
     });
+  })
+);
+
+// ============================================
+// POST /api/jobs/:id/analyze-match
+// Analyze how well a resume matches a job
+// ============================================
+
+const matchAnalysisSchema = z.object({
+  resumeId: z.string().uuid(),
+});
+
+router.post(
+  '/:id/analyze-match',
+  asyncHandler(async (req, res) => {
+    const jobId = req.params.id;
+    const validated = matchAnalysisSchema.parse(req.body);
+
+    // Verify job exists
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!job) {
+      throw new AppError('Job not found', 404);
+    }
+
+    // Verify resume exists
+    const resume = await prisma.resume.findUnique({
+      where: { id: validated.resumeId },
+    });
+
+    if (!resume) {
+      throw new AppError('Resume not found', 404);
+    }
+
+    // Analyze match using AI (with caching)
+    const analysis = await analyzeJobMatch(jobId, validated.resumeId);
+
+    res.json(analysis);
   })
 );
 

@@ -191,7 +191,6 @@ export async function scrapeAllJobs(): Promise<ScrapedJob[]> {
 
   const results = await Promise.allSettled([
     scrapeRemotiveJobs(),
-    scrapeArbeitnowJobs(),
     scrapeRemoteOKJobs(),
     scrapeJSearchJobs(),
   ]);
@@ -200,11 +199,11 @@ export async function scrapeAllJobs(): Promise<ScrapedJob[]> {
 
   results.forEach((result, index) => {
     if (result.status === 'fulfilled') {
-      const sourceNames = ['Remotive', 'Arbeitnow', 'RemoteOK', 'JSearch'];
+      const sourceNames = ['Remotive', 'RemoteOK', 'JSearch'];
       console.log(`✅ ${sourceNames[index]}: ${result.value.length} jobs`);
       allJobs.push(...result.value);
     } else {
-      const sourceNames = ['Remotive', 'Arbeitnow', 'RemoteOK', 'JSearch'];
+      const sourceNames = ['Remotive', 'RemoteOK', 'JSearch'];
       console.error(`❌ ${sourceNames[index]} failed:`, result.reason);
     }
   });

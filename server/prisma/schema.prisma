@@ -174,6 +174,58 @@ model UserPreferences {
 }
 
 // ============================================================================
+// JOB MATCH CACHE MODEL
+// ============================================================================
+
+model JobMatchCache {
+  id       String @id @default(uuid())
+  jobId    String @map("job_id")
+  resumeId String @map("resume_id")
+
+  // Match analysis results
+  confidenceScore    Int     @map("confidence_score") // 0-100
+  matchedSkills      String? @map("matched_skills") // JSON array
+  missingSkills      String? @map("missing_skills") // JSON array
+  transferableSkills String? @map("transferable_skills") // JSON array
+  strengths          String? @map("strengths") // JSON array
+  gaps               String? @map("gaps") // JSON array
+  recommendation     String? @map("recommendation")
+  keywordsDetected   String? @map("keywords_detected") // JSON array of keyword objects
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([jobId, resumeId])
+  @@index([jobId])
+  @@index([resumeId])
+  @@map("job_match_cache")
+}
+
+// ============================================================================
+// TAILORED RESUME MODEL
+// ============================================================================
+
+model TailoredResume {
+  id               String @id @default(uuid())
+  originalResumeId String @map("original_resume_id")
+  jobId            String @map("job_id")
+
+  // Tailored content
+  content         String  @map("content") // JSON of full tailored resume
+  pdfUrl          String? @map("pdf_url") // Path to generated PDF
+  docxUrl         String? @map("docx_url") // Path to generated DOCX
+  changes         String? @map("changes") // JSON array of change objects
+  keywordsApplied String? @map("keywords_applied") // JSON array
+  keywordsSkipped String? @map("keywords_skipped") // JSON array
+  honestyScore    Int     @default(100) @map("honesty_score") // Should always be 100
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([originalResumeId])
+  @@index([jobId])
+  @@map("tailored_resumes")
+}
+
+// ============================================================================
 // NOTES
 // ============================================================================
 // SQLite does not support enums, so we use String with comments
